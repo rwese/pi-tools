@@ -120,8 +120,8 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 		description: "Show active tools",
 		handler: async (_args, ctx) => {
 			const active = pi.getActiveTools();
-			const toolList = active.length > 0 ? active.map((t) => `  - ${t}`).join("\n") : "  (none)";
-			await ctx.ui.print(`Active tools:\n${toolList}`);
+			const toolList = active.length > 0 ? active.join(", ") : "none";
+			ctx.ui.notify(`Active tools: ${toolList}`, "info");
 		},
 	});
 
