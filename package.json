@@ -1,0 +1,33 @@
+{
+  "name": "pi-tools",
+  "version": "1.0.0",
+  "description": "pi extension to view and manage active tools",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "coding-agent"
+  ],
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@mariozechner/pi-coding-agent": "^0.1.0",
+    "typescript": "^5.0.0"
+  }
+}
