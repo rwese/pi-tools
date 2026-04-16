@@ -12,6 +12,23 @@
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "0.67.1",
     "@mariozechner/pi-tui": "*",
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.0",
+    "vitest": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "tsx": "^4.0.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "prettier": "^3.4.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint extensions/",
+    "lint:fix": "eslint extensions/ --fix",
+    "format": "prettier --write extensions/",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run typecheck && npm run lint && npm run test"
   }
 }
