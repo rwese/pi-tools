@@ -1,6 +1,6 @@
 # pi-tools
 
-A [pi](https://github.com/badlogic/pi-mono) extension to view and manage active tools.
+A [pi](https://github.com/rwese/pi-mono) extension to view and manage active tools.
 
 ## Features
 
