@@ -31,7 +31,7 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 	}
 
 	function restoreFromBranch(ctx: ExtensionContext) {
-		allTools = pi.getAllTools();
+		allTools = pi.getAllTools().sort((a, b) => a.name.localeCompare(b.name));
 		const branchEntries = ctx.sessionManager.getBranch();
 		let savedTools: string[] | undefined;
 
@@ -56,8 +56,8 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 	// /tools - Interactive selector
 	pi.registerCommand("tools", {
 		description: "Enable/disable tools",
-		handler: async (_args, ctx) => {
-			allTools = pi.getAllTools();
+		handler: (_args, ctx) => {
+			allTools = pi.getAllTools().sort((a, b) => a.name.localeCompare(b.name));
 
 			await ctx.ui.custom((tui, theme, _kb, done) => {
 				const items: SettingItem[] = allTools.map((tool) => ({
@@ -93,6 +93,7 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 					() => {
 						done(undefined);
 					},
+					{ enableSearch: true },
 				);
 
 				container.addChild(settingsList);
@@ -118,18 +119,18 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 	// /show-tools - Display active tools list
 	pi.registerCommand("show-tools", {
 		description: "Show active tools",
-		handler: async (_args, ctx) => {
+		handler: (_args, ctx) => {
 			const active = pi.getActiveTools();
 			const toolList = active.length > 0 ? active.join(", ") : "none";
 			ctx.ui.notify(`Active tools: ${toolList}`, "info");
 		},
 	});
 
-	pi.on("session_start", async (_event, ctx) => {
+	pi.on("session_start", (_event, ctx) => {
 		restoreFromBranch(ctx);
 	});
 
-	pi.on("session_tree", async (_event, ctx) => {
+	pi.on("session_tree", (_event, ctx) => {
 		restoreFromBranch(ctx);
 	});
 }
