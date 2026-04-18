@@ -56,7 +56,7 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 	// /tools - Interactive selector
 	pi.registerCommand("tools", {
 		description: "Enable/disable tools",
-		handler: (_args, ctx) => {
+		handler: async (_args, ctx) => {
 			allTools = pi.getAllTools().sort((a, b) => a.name.localeCompare(b.name));
 
 			await ctx.ui.custom((tui, theme, _kb, done) => {
