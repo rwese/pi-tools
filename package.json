@@ -1,5 +1,5 @@
 {
-  "name": "pi-tools",
+  "name": "@rwese/pi-tools",
   "version": "1.1.1",
   "description": "pi extension to view and manage active tools",
   "type": "module",
