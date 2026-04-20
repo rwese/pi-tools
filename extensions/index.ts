@@ -225,9 +225,7 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 							: theme.fg("error", "○ disabled");
 
 						detailTitle.setText(
-							theme.bold(theme.fg("accent", `┌─ ${tool.name} `)) +
-							" ".repeat(Math.max(0, 50 - tool.name.length - 6)) +
-							"─".repeat(Math.max(0, 50 - tool.name.length - 6)) + "┐",
+							theme.bold(theme.fg("accent", tool.name)),
 						);
 						detailDescription.setText(theme.fg("text", tool.description || "No description"));
 
