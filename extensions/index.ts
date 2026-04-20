@@ -116,6 +116,25 @@ function getTypeName(schema: TSchema): string {
 	}
 }
 
+function sortTools(tools: ToolInfo[], enabledTools: Set<string>): void {
+	tools.sort((a, b) => {
+		const aEnabled = enabledTools.has(a.name);
+		const bEnabled = enabledTools.has(b.name);
+		if (aEnabled !== bEnabled) {
+			return aEnabled ? -1 : 1;
+		}
+		return a.name.localeCompare(b.name);
+	});
+}
+
+function buildItems(tools: ToolInfo[], enabledTools: Set<string>): SelectItem[] {
+	return tools.map((tool) => ({
+		value: tool.name,
+		label: `${enabledTools.has(tool.name) ? "●" : "○"} ${tool.name}`,
+		description: tool.description,
+	}));
+}
+
 export default function piToolsExtension(pi: ExtensionAPI) {
 	let enabledTools: Set<string> = new Set();
 	let allTools: ToolInfo[] = [];
@@ -132,7 +151,7 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 	}
 
 	function restoreFromBranch(ctx: ExtensionContext) {
-		allTools = pi.getAllTools().sort((a, b) => a.name.localeCompare(b.name));
+		allTools = pi.getAllTools();
 		const branchEntries = ctx.sessionManager.getBranch();
 		let savedTools: string[] | undefined;
 
@@ -152,20 +171,19 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 		} else {
 			enabledTools = new Set(pi.getActiveTools());
 		}
+
+		sortTools(allTools, enabledTools);
 	}
 
 	// /tools - Interactive selector
 	pi.registerCommand("tools", {
 		description: "Enable/disable tools",
 		handler: async (_args, ctx) => {
-			allTools = pi.getAllTools().sort((a, b) => a.name.localeCompare(b.name));
+			allTools = pi.getAllTools();
+			sortTools(allTools, enabledTools);
 
-			// Build SelectItems with description for each tool
-			const items: SelectItem[] = allTools.map((tool) => ({
-				value: tool.name,
-				label: tool.name,
-				description: tool.description,
-			}));
+			// Build SelectItems with status indicator and description
+			let items = buildItems(allTools, enabledTools);
 
 			await ctx.ui.custom((tui, theme, _kb, done) => {
 				const container = new Container();
@@ -272,6 +290,16 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 					}
 					applyTools();
 					persistState();
+
+					// Rebuild list with new sort order and status
+					sortTools(allTools, enabledTools);
+					items = buildItems(allTools, enabledTools);
+					selectList.items = items;
+
+					// Find and select the toggled tool in the new order
+					const newIndex = allTools.findIndex((t) => t.name === tool.name);
+					selectList.setSelectedIndex(Math.max(0, newIndex));
+
 					updateDetailPanel(tool);
 					tui.requestRender();
 				};
