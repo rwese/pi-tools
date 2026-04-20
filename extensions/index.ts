@@ -242,8 +242,12 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 							? theme.fg("success", "● enabled")
 							: theme.fg("error", "○ disabled");
 
+						// Source badge from tool injection info
+						const sourceBadge = tool.sourceInfo
+							? " " + theme.fg("muted", `[${tool.sourceInfo.source}]`)
+							: "";
 						detailTitle.setText(
-							theme.bold(theme.fg("accent", tool.name)),
+							theme.bold(theme.fg("accent", tool.name)) + sourceBadge,
 						);
 						detailDescription.setText(theme.fg("text", tool.description || "No description"));
 
@@ -294,10 +298,14 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 					// Rebuild list with new sort order and status
 					sortTools(allTools, enabledTools);
 					items = buildItems(allTools, enabledTools);
-					selectList.items = items;
 
 					// Find and select the toggled tool in the new order
 					const newIndex = allTools.findIndex((t) => t.name === tool.name);
+
+					// Update both items and filteredItems to keep them in sync
+					// filteredItems is private, so cast to any to update it
+					selectList.items = items;
+					(selectList as any).filteredItems = items;
 					selectList.setSelectedIndex(Math.max(0, newIndex));
 
 					updateDetailPanel(tool);

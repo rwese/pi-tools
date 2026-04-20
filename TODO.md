@@ -31,3 +31,19 @@ Interactive tmux test verified:
 - Enter toggles tool enabled/disabled state
 - Esc closes dialog
 - State persists via `/show-tools` command
+
+---
+
+## Plan: Add Tool Source Badge (2026-04-20)
+
+### Status: ✅ Complete
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | Add source badge to detail panel | ✅ Done | Badge shows `[source]` after tool name |
+| 2 | Test with lint | ✅ Done | npm run lint passes (warning only) |
+
+### Changes Made
+
+- Added source badge display in detail panel showing which extension/package injected the tool
+- Badge rendered with muted color: `[extension-name]`
