@@ -21,9 +21,19 @@ interface ToolsState {
  * Parse TypeBox schema to extract parameter information.
  * Returns a summary string like "command (string), timeout (number?)"
  */
-function parseParameters(schema: TSchema): string {
+interface ParameterInfo {
+	name: string;
+	type: string;
+	optional: boolean;
+}
+
+/**
+ * Parse TypeBox schema to extract parameter information.
+ * Returns an array of ParameterInfo for structured display.
+ */
+function parseParameters(schema: TSchema): ParameterInfo[] {
 	if (!schema || typeof schema !== "object") {
-		return "";
+		return [];
 	}
 
 	// Handle TObject (root schema for tools)
@@ -32,30 +42,29 @@ function parseParameters(schema: TSchema): string {
 		const paramNames = Object.keys(props);
 
 		if (paramNames.length === 0) {
-			return "no parameters";
+			return [];
 		}
 
-		const params = paramNames.map((name) => {
+		return paramNames.map((name) => {
 			const prop = props[name] as TSchema;
-			const isOptional = isOptionalType(prop);
-			const typeName = getTypeName(prop);
-			return `${name} (${typeName}${isOptional ? "?" : ""})`;
+			const optional = isOptionalType(prop);
+			const type = getTypeName(prop);
+			return { name, type, optional };
 		});
-
-		return params.join(", ");
 	}
 
-	return "";
+	return [];
 }
 
 function isOptionalType(schema: TSchema): boolean {
-	const typeSymbol = Symbol.for("@sinclair/typebox/type");
+	// TypeBox uses Symbol.for('TypeBox.Optional') to mark optional properties
+	const optionalSymbol = Symbol.for("TypeBox.Optional");
 	const schemaAny = schema as {
-		[typeSymbol]?: string;
+		[optionalSymbol]?: string;
 		optional?: boolean;
 	};
 
-	if (schemaAny[typeSymbol] === "Optional") {
+	if (schemaAny[optionalSymbol] === "Optional") {
 		return true;
 	}
 	if (schemaAny.optional === true) {
@@ -65,15 +74,16 @@ function isOptionalType(schema: TSchema): boolean {
 }
 
 function getTypeName(schema: TSchema): string {
-	const typeSymbol = Symbol.for("@sinclair/typebox/type");
+	// TypeBox uses Symbol.for('TypeBox.Kind') for type classification
+	const kindSymbol = Symbol.for("TypeBox.Kind");
 	const schemaAny = schema as {
 		type?: string;
-		[typeSymbol]?: string;
+		[kindSymbol]?: string;
 		item?: TSchema;
 		items?: TSchema;
 	};
 
-	const typeValue = schemaAny[typeSymbol];
+	const typeValue = schemaAny[kindSymbol];
 
 	switch (typeValue) {
 		case "String":
@@ -170,19 +180,43 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 				const detailPanel = new Box(1, 1);
 				const detailTitle = new Text("", 0, 0);
 				const detailDescription = new Text("", 0, 0);
-				const detailParams = new Text("", 0, 0);
+				const detailParamsContainer = new Container();
 				const detailStatus = new Text("", 0, 0);
 
 				detailPanel.addChild(detailTitle);
 				detailPanel.addChild(detailDescription);
-				detailPanel.addChild(detailParams);
+				detailPanel.addChild(detailParamsContainer);
 				detailPanel.addChild(detailStatus);
+
+				function renderParams(params: ParameterInfo[]): string[] {
+					if (params.length === 0) {
+						return [theme.fg("muted", "  No parameters")];
+					}
+
+					const lines: string[] = [];
+					for (const param of params) {
+						const nameLen = 14;
+						const paddedName = param.name.padEnd(nameLen);
+						const typeLen = 10;
+						const paddedType = param.type.padEnd(typeLen);
+
+						// Format: "  name         type       [required]"
+						const line =
+							theme.fg("accent", `  ${paddedName}`) +
+							theme.fg("text", paddedType) +
+							(param.optional
+								? theme.fg("muted", "[optional]")
+								: theme.fg("success", "[required]"));
+						lines.push(line);
+					}
+					return lines;
+				}
 
 				function updateDetailPanel(tool: ToolInfo | null) {
 					if (!tool) {
 						detailTitle.setText("");
 						detailDescription.setText("");
-						detailParams.setText("");
+						detailParamsContainer.clear();
 						detailStatus.setText(theme.fg("dim", "Select a tool to view details"));
 					} else {
 						const isEnabled = enabledTools.has(tool.name);
@@ -196,10 +230,15 @@ export default function piToolsExtension(pi: ExtensionAPI) {
 							"─".repeat(Math.max(0, 50 - tool.name.length - 6)) + "┐",
 						);
 						detailDescription.setText(theme.fg("text", tool.description || "No description"));
-						detailParams.setText(
-							theme.fg("muted", "Parameters: ") +
-							theme.fg("text", parseParameters(tool.parameters)),
-						);
+
+						// Rebuild params container
+						detailParamsContainer.clear();
+						const params = parseParameters(tool.parameters);
+						const paramLines = renderParams(params);
+						for (const line of paramLines) {
+							detailParamsContainer.addChild(new Text(line, 0, 0));
+						}
+
 						detailStatus.setText(statusText);
 					}
 					detailPanel.invalidateCache();
